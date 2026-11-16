@@ -146,10 +146,13 @@ footer{max-width:1180px;margin:20px auto 40px;padding:16px 24px 0;border-top:1px
 
 /* ===== 見比べ用：背表紙A（布装・箔押し）／B（控えめ）／C（古書の革装） ===== */
 :root[data-spine="b"] button.spine{
-  background-image:linear-gradient(90deg,rgba(0,0,0,.18),rgba(255,255,255,.06) 30%,rgba(0,0,0,0) 60%,rgba(0,0,0,.18));
-  box-shadow:0 0 0 1px rgba(0,0,0,.18) inset;border-radius:2px 2px 0 0}
+  /* 光：A・Cと同じ丸背の陰影（両端を暗く、左寄りに照り）。布目と飾り罫はなし */
+  background-image:
+    linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 30%),
+    linear-gradient(90deg,rgba(0,0,0,.36),rgba(255,255,255,.12) 22%,rgba(255,255,255,.03) 45%,rgba(0,0,0,.10) 75%,rgba(0,0,0,.38));
+  box-shadow:0 0 0 1px rgba(0,0,0,.25) inset,2px 0 3px rgba(0,0,0,.28);border-radius:3px 3px 1px 1px}
 :root[data-spine="b"] button.spine::before,:root[data-spine="b"] button.spine::after{display:none}
-:root[data-spine="b"] .spine .t{text-shadow:none;font-weight:500}
+:root[data-spine="b"] .spine .t{font-weight:500;text-shadow:0 1px 0 rgba(0,0,0,.45),0 -1px 0 rgba(255,255,255,.10)}
 :root[data-spine="b"] .spine .mk{border:0;font-size:10px;opacity:.6}
 :root[data-spine="c"] button.spine{
   border-radius:5px 5px 2px 2px;
@@ -163,6 +166,12 @@ footer{max-width:1180px;margin:20px auto 40px;padding:16px 24px 0;border-top:1px
 :root[data-spine="c"] button.spine::before{top:10px;opacity:.8}
 :root[data-spine="c"] button.spine::after{bottom:46px;opacity:.8}
 :root[data-spine="c"] .spine .t{font-weight:700;text-shadow:0 1px 0 rgba(0,0,0,.6),0 0 6px rgba(220,190,120,.25)}
+
+/* 棚の上から照らす光（棚ごとに小さな灯りがあるイメージ） */
+:root[data-spine="b"] .rack::after{content:"";position:absolute;left:0;right:0;top:0;height:100%;pointer-events:none;
+  background:radial-gradient(60% 70% at 50% 0%,rgba(255,236,200,.06),rgba(255,236,200,0) 70%);mix-blend-mode:screen}
+:root[data-theme="day"][data-spine="b"] .rack::after{background:radial-gradient(60% 70% at 50% 0%,rgba(255,250,235,.45),rgba(255,250,235,0) 70%);mix-blend-mode:soft-light}
+:root[data-spine="b"] button.spine:hover{filter:brightness(1.08)}
 /* ===== 見比べ用：棚1（木目の棚板）／2（線一本）／3（木の棚箱） ===== */
 :root[data-shelf="2"] .rack::before{display:none}
 :root[data-shelf="2"] .board{height:1px;background:var(--muted);opacity:.5;box-shadow:none}
