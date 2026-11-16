@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="night" data-spine="a" data-shelf="1">
+<html lang="ja" data-theme="night" data-spine="b" data-shelf="1">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -201,17 +201,11 @@ footer{max-width:1180px;margin:20px auto 40px;padding:16px 24px 0;border-top:1px
 
 <main id="shelves"></main>
 <div class="scrim" id="scrim"></div>
-<div class="compare" aria-label="見比べ用の切り替え">
-  <b>見比べ用</b>
-  <span>背表紙</span><span class="opts" data-k="spine"><button type="button" data-v="a" aria-pressed="true">A</button><button type="button" data-v="b" aria-pressed="false">B</button><button type="button" data-v="c" aria-pressed="false">C</button></span>
-  <span>棚</span><span class="opts" data-k="shelf"><button type="button" data-v="1" aria-pressed="true">1</button><button type="button" data-v="2" aria-pressed="false">2</button><button type="button" data-v="3" aria-pressed="false">3</button></span>
-</div>
 
 
 <footer>
   
   当サイトはアフィリエイト広告を利用しています。<br>
-  右下の「見比べ用」で、背表紙（A：布装・箔押し／B：控えめ／C：古書の革装）と棚（1：木目の棚板／2：線一本／3：木の棚箱）を切り替えられます。<br>
   デザイン試作 v2：書名・著者名・解説はClaudeによる仮のもので、掲載前に確認が必要です。背表紙の色と質感はイメージで、実際の装丁とは異なります。高さは判型、幅はページ数に連動（いずれも仮の値）。出版社・原書の地域と年・選書の記録の数値は表示位置を示すための仮表示です。枠は新しい6枠（仮称）に読み替えています。
 </footer>
 
@@ -473,7 +467,7 @@ SHELVES.forEach((shelf,si)=>{
     btn.style.cssText=`height:${h}px;width:${w}px;background-color:${c.bg};--foil:${c.foil}`;
     btn.setAttribute("aria-pressed","false");
     btn.setAttribute("aria-label",`${title}（${role}）`);
-    btn.innerHTML=`<span class="t" style="font-size:${fs}px">${label}</span><span class="mk" aria-hidden="true">${role[0]}</span>`;
+    btn.innerHTML=`<span class="t" style="font-size:${fs}px">${label}</span>`;
     btn.addEventListener("click",()=>{ btn.getAttribute("aria-pressed")==="true" ? close() : open(bi); });
     row.appendChild(btn); spines.push(btn);
   });
@@ -527,10 +521,6 @@ setTheme(saved||(mq.matches?"night":"day"),false);
 mq.addEventListener("change",e=>{let s=null;try{s=localStorage.getItem("theme");}catch(_){} if(!s) setTheme(e.matches?"night":"day",false);});
 document.querySelectorAll(".toggle button").forEach(b=>b.addEventListener("click",()=>setTheme(b.dataset.t,true)));
 
-document.querySelectorAll(".compare .opts").forEach(g=>g.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
-  document.documentElement.dataset[g.dataset.k]=b.dataset.v;
-  g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
-})));
 </script>
 </body>
 </html>
