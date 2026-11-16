@@ -464,11 +464,17 @@ SHELVES.forEach((shelf,si)=>{
   }
 });
 
-// 夜／昼の切り替え（見比べ用）
-document.querySelectorAll(".toggle button").forEach(b=>b.addEventListener("click",()=>{
-  document.documentElement.dataset.theme=b.dataset.t;
-  document.querySelectorAll(".toggle button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
-}));
+// 夜／昼：最初は端末の設定に合わせ、選んだほうを次回も覚えておく
+function setTheme(t,save){
+  document.documentElement.dataset.theme=t;
+  document.querySelectorAll(".toggle button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.t===t?"true":"false"));
+  if(save){try{localStorage.setItem("theme",t);}catch(e){}}
+}
+let saved=null; try{saved=localStorage.getItem("theme");}catch(e){}
+const mq=matchMedia("(prefers-color-scheme: dark)");
+setTheme(saved||(mq.matches?"night":"day"),false);
+mq.addEventListener("change",e=>{let s=null;try{s=localStorage.getItem("theme");}catch(_){} if(!s) setTheme(e.matches?"night":"day",false);});
+document.querySelectorAll(".toggle button").forEach(b=>b.addEventListener("click",()=>setTheme(b.dataset.t,true)));
 </script>
 </body>
 </html>
