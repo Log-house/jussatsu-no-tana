@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja" data-theme="night">
+<html lang="ja" data-theme="night" data-spine="a" data-shelf="1">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -59,8 +59,8 @@ nav.menu a:hover,nav.menu a:focus-visible{color:var(--ink);outline:none}
 .toggle button:focus-visible{outline:2px solid var(--accent)}
 
 /* 棚の一覧：広い画面では2列に並べ、密度を出す */
-main{max-width:1180px;margin:0 auto;padding:18px 24px 40px;
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:30px 56px;align-items:start}
+main{max-width:820px;margin:0 auto;padding:24px 24px 40px;
+  display:grid;grid-template-columns:1fr;gap:44px;align-items:start}
 section.shelf{display:grid;grid-template-columns:34px 1fr;gap:0 10px}
 .label{writing-mode:vertical-rl;font-family:var(--display);font-size:16px;letter-spacing:.3em;
   align-self:end;padding-bottom:22px;white-space:nowrap}
@@ -143,6 +143,48 @@ footer{max-width:1180px;margin:20px auto 40px;padding:16px 24px 0;border-top:1px
   .scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .3s;z-index:10}
   .scrim.on{opacity:1;pointer-events:auto}
 }
+
+/* ===== 見比べ用：背表紙A（布装・箔押し）／B（控えめ）／C（古書の革装） ===== */
+:root[data-spine="b"] button.spine{
+  background-image:linear-gradient(90deg,rgba(0,0,0,.18),rgba(255,255,255,.06) 30%,rgba(0,0,0,0) 60%,rgba(0,0,0,.18));
+  box-shadow:0 0 0 1px rgba(0,0,0,.18) inset;border-radius:2px 2px 0 0}
+:root[data-spine="b"] button.spine::before,:root[data-spine="b"] button.spine::after{display:none}
+:root[data-spine="b"] .spine .t{text-shadow:none;font-weight:500}
+:root[data-spine="b"] .spine .mk{border:0;font-size:10px;opacity:.6}
+:root[data-spine="c"] button.spine{
+  border-radius:5px 5px 2px 2px;
+  background-image:
+    radial-gradient(circle at 30% 20%,rgba(255,255,255,.06) 0 1px,transparent 1.5px),
+    radial-gradient(circle at 70% 60%,rgba(0,0,0,.18) 0 1px,transparent 1.5px),
+    linear-gradient(180deg,transparent 0 22px,rgba(0,0,0,.45) 22px 24px,rgba(255,255,255,.18) 24px 26px,transparent 26px calc(100% - 40px),rgba(0,0,0,.45) calc(100% - 40px) calc(100% - 38px),rgba(255,255,255,.18) calc(100% - 38px) calc(100% - 36px),transparent calc(100% - 36px)),
+    linear-gradient(90deg,rgba(0,0,0,.5),rgba(255,255,255,.14) 25%,rgba(255,255,255,.05) 50%,rgba(0,0,0,.12) 75%,rgba(0,0,0,.5));
+  background-size:5px 5px,7px 7px,auto,auto;
+  box-shadow:0 0 0 1px rgba(0,0,0,.4) inset,3px 0 4px rgba(0,0,0,.35);padding-top:34px}
+:root[data-spine="c"] button.spine::before{top:10px;opacity:.8}
+:root[data-spine="c"] button.spine::after{bottom:46px;opacity:.8}
+:root[data-spine="c"] .spine .t{font-weight:700;text-shadow:0 1px 0 rgba(0,0,0,.6),0 0 6px rgba(220,190,120,.25)}
+/* ===== 見比べ用：棚1（木目の棚板）／2（線一本）／3（木の棚箱） ===== */
+:root[data-shelf="2"] .rack::before{display:none}
+:root[data-shelf="2"] .board{height:1px;background:var(--muted);opacity:.5;box-shadow:none}
+:root[data-shelf="3"] .case{border-left:12px solid var(--wood1);border-right:12px solid var(--wood1);border-top:10px solid var(--wood1);
+  border-radius:2px;box-shadow:0 14px 20px -12px rgba(0,0,0,.6)}
+:root[data-shelf="3"] .rack{background:
+  repeating-linear-gradient(90deg,rgba(0,0,0,.06) 0 1px,transparent 1px 23px),
+  linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.25));}
+:root[data-day] .x{}
+:root[data-theme="day"][data-shelf="3"] .rack{background:
+  repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 1px,transparent 1px 23px),
+  linear-gradient(180deg,rgba(90,60,30,.35),rgba(90,60,30,.12));}
+:root[data-shelf="3"] .board{height:18px}
+:root[data-shelf="3"] .card.open{margin-top:24px}
+.compare{position:fixed;right:14px;bottom:14px;z-index:30;background:var(--paper);border:1px solid var(--line);border-radius:6px;
+  padding:8px 12px;font-size:12px;color:var(--muted);display:grid;grid-template-columns:auto auto;gap:6px 10px;align-items:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.compare b{font-weight:500;color:var(--ink);grid-column:1/-1;font-size:11px;letter-spacing:.1em}
+.compare .opts{display:flex;gap:4px}
+.compare button{all:unset;cursor:pointer;border:1px solid var(--line);border-radius:3px;padding:0 9px;color:var(--ink)}
+.compare button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+@media (max-width:600px){.compare{right:8px;bottom:8px;padding:6px 8px;font-size:11px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -159,9 +201,17 @@ footer{max-width:1180px;margin:20px auto 40px;padding:16px 24px 0;border-top:1px
 
 <main id="shelves"></main>
 <div class="scrim" id="scrim"></div>
+<div class="compare" aria-label="見比べ用の切り替え">
+  <b>見比べ用</b>
+  <span>背表紙</span><span class="opts" data-k="spine"><button type="button" data-v="a" aria-pressed="true">A</button><button type="button" data-v="b" aria-pressed="false">B</button><button type="button" data-v="c" aria-pressed="false">C</button></span>
+  <span>棚</span><span class="opts" data-k="shelf"><button type="button" data-v="1" aria-pressed="true">1</button><button type="button" data-v="2" aria-pressed="false">2</button><button type="button" data-v="3" aria-pressed="false">3</button></span>
+</div>
+
 
 <footer>
+  
   当サイトはアフィリエイト広告を利用しています。<br>
+  右下の「見比べ用」で、背表紙（A：布装・箔押し／B：控えめ／C：古書の革装）と棚（1：木目の棚板／2：線一本／3：木の棚箱）を切り替えられます。<br>
   デザイン試作 v2：書名・著者名・解説はClaudeによる仮のもので、掲載前に確認が必要です。背表紙の色と質感はイメージで、実際の装丁とは異なります。高さは判型、幅はページ数に連動（いずれも仮の値）。出版社・原書の地域と年・選書の記録の数値は表示位置を示すための仮表示です。枠は新しい6枠（仮称）に読み替えています。
 </footer>
 
@@ -391,6 +441,7 @@ const CLOTH = {
 const pad = n => String(n).padStart(2,"0");
 const hash = s => [...s].reduce((h,c)=>(h*31+c.codePointAt(0))>>>0,7);
 
+const MOB=matchMedia("(max-width:600px)").matches; const SCALE=MOB?1.35:1.6; const WS=MOB?1.0:1.6;
 const main=document.getElementById("shelves");
 const scrim=document.getElementById("scrim");
 let closeCurrent=null;
@@ -410,11 +461,11 @@ SHELVES.forEach((shelf,si)=>{
     const [title,author,old]=b; const role=MAP[old]; const c=CLOTH[role];
     const label=SHORT[title]||title;
     const fmt=b[5]||FORMAT[title], pgs=b[4]||PAGES[title];
-    const h=Math.round((FORMAT_MM[fmt]||188)*1.4);
+    const h=Math.round((FORMAT_MM[fmt]||188)*SCALE);
     const area=h-58;
-    const pw=Math.max(26,Math.min(70,20+(pgs||300)*0.046));
-    let fs=14, cols=Math.max(1,Math.floor((pw-10)/(fs*1.3)));
-    while(label.length*fs*1.1>area*cols && fs>10.5){fs-=0.5; cols=Math.max(1,Math.floor((pw-10)/(fs*1.3)));}
+    const pw=Math.max(26,Math.min(70,20+(pgs||300)*0.046))*WS;
+    let fs=14*SCALE/1.4, cols=Math.max(1,Math.floor((pw-10)/(fs*1.3)));
+    while(label.length*fs*1.1>area*cols && fs>10.5*SCALE/1.4){fs-=0.5; cols=Math.max(1,Math.floor((pw-10)/(fs*1.3)));}
     const need=Math.ceil(label.length*fs*1.1/area);
     const w=Math.max(pw, need*fs*1.3+10);
     const btn=document.createElement("button");
@@ -475,6 +526,11 @@ const mq=matchMedia("(prefers-color-scheme: dark)");
 setTheme(saved||(mq.matches?"night":"day"),false);
 mq.addEventListener("change",e=>{let s=null;try{s=localStorage.getItem("theme");}catch(_){} if(!s) setTheme(e.matches?"night":"day",false);});
 document.querySelectorAll(".toggle button").forEach(b=>b.addEventListener("click",()=>setTheme(b.dataset.t,true)));
+
+document.querySelectorAll(".compare .opts").forEach(g=>g.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+  document.documentElement.dataset[g.dataset.k]=b.dataset.v;
+  g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+})));
 </script>
 </body>
 </html>
