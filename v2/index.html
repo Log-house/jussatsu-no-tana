@@ -542,7 +542,7 @@ SHELVES.map((shelf,si)=>[shelf,si]).reverse().forEach(([shelf,si])=>{
   }
   function open(i){
     if(closeCurrent && closeCurrent!==close) closeCurrent();
-    if(spines[i].getAttribute("aria-pressed")!=="true") SND.pull();
+    if(spines[i].getAttribute("aria-pressed")!=="true"){ if(closeCurrent===close) SND.flip(); else SND.pull(); }
     const [title,author,old,desc]=shelf.books[i]; const role=MAP[old]; const c=CLOTH[role];
     const hh=hash(title);
     spines.forEach((s,k)=>s.setAttribute("aria-pressed",k===i?"true":"false"));
@@ -566,7 +566,7 @@ SHELVES.map((shelf,si)=>[shelf,si]).reverse().forEach(([shelf,si])=>{
       </dl></details>
       <div class="pn"><button type="button" data-d="-1" ${i===0?"disabled":""}>前の本</button><button type="button" data-d="1" ${i===shelf.books.length-1?"disabled":""}>次の本</button></div>
     </div>`;
-    card.classList.add("open"); SND.flip();
+    card.classList.add("open");
     card.querySelectorAll(".marks button").forEach(mb=>mb.addEventListener("click",()=>{
       const cur=getMark(title), next=cur===mb.dataset.m?null:mb.dataset.m; setMark(title,next);
       if(next) spines[i].dataset.mark=next; else delete spines[i].dataset.mark;
@@ -605,26 +605,19 @@ const SND=(()=>{let ctx=null,on=false,amb=null;
   function C(){if(!ctx){try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){} ctx=new (window.AudioContext||window.webkitAudioContext)();} if(ctx.state==="suspended")ctx.resume(); return ctx;}
   function noise(sec){const c=C(),b=c.createBuffer(1,Math.ceil(c.sampleRate*sec),c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const n=c.createBufferSource();n.buffer=b;return n;}
   function env(g,t0,peak,att,dec){g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(peak,t0+att);g.gain.exponentialRampToValueAtTime(.0001,t0+att+dec);}
-  function pull(){if(!on)return;const c=C(),t=c.currentTime,n=noise(.4),f=c.createBiquadFilter(),g=c.createGain();
-    f.type="bandpass";f.Q.value=1.2;f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(2600,t+.25);
-    env(g,t,1.3,.04,.28);n.connect(f).connect(g).connect(c.destination);n.start(t);n.stop(t+.4);}
-  function flip(){if(!on)return;const c=C(),t=c.currentTime+.05;[0,.07,.15].forEach((o,k)=>{const n=noise(.2),f=c.createBiquadFilter(),g=c.createGain();
-    f.type="highpass";f.frequency.value=2200+k*500;env(g,t+o,.8-k*.18,.01,.12);n.connect(f).connect(g).connect(c.destination);n.start(t+o);n.stop(t+o+.2);});}
-  function close(){if(!on)return;const c=C(),t=c.currentTime,o=c.createOscillator(),g=c.createGain(),n=noise(.08),f=c.createBiquadFilter(),g2=c.createGain();
-    o.type="sine";o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(70,t+.15);env(g,t,.9,.005,.18);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.25);
-    f.type="lowpass";f.frequency.value=1800;env(g2,t,.4,.002,.05);n.connect(f).connect(g2).connect(c.destination);n.start(t);n.stop(t+.08);}
+  // さりげなく：どれも短く、小さく。1回の操作で鳴るのは1音だけ
+  function pull(){if(!on)return;const c=C(),t=c.currentTime,n=noise(.25),f=c.createBiquadFilter(),g=c.createGain();
+    f.type="bandpass";f.Q.value=1.4;f.frequency.setValueAtTime(1100,t);f.frequency.exponentialRampToValueAtTime(2400,t+.15);
+    env(g,t,.45,.03,.16);n.connect(f).connect(g).connect(c.destination);n.start(t);n.stop(t+.25);}
+  function flip(){if(!on)return;const c=C(),t=c.currentTime,n=noise(.12),f=c.createBiquadFilter(),g=c.createGain();
+    f.type="highpass";f.frequency.value=2600;env(g,t,.22,.008,.08);n.connect(f).connect(g).connect(c.destination);n.start(t);n.stop(t+.12);}
+  function close(){if(!on)return;const c=C(),t=c.currentTime,o=c.createOscillator(),g=c.createGain();
+    o.type="sine";o.frequency.setValueAtTime(190,t);o.frequency.exponentialRampToValueAtTime(120,t+.08);env(g,t,.22,.004,.09);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.14);}
   function ribbon(){if(!on)return;const c=C(),t=c.currentTime,o=c.createOscillator(),g=c.createGain();
-    o.type="sine";o.frequency.setValueAtTime(1500,t);o.frequency.exponentialRampToValueAtTime(1100,t+.08);env(g,t,.35,.004,.12);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.15);}
-  // 部屋の音：夜は低い静けさ（遠い雨のような気配）、昼は少し明るいざわめき。ごく小さく
-  function ambient(start){if(amb){try{amb.n.stop();}catch(e){} amb=null;} if(!start)return;
-    const c=C(),len=c.sampleRate*4,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);let last=0;
-    for(let i=0;i<len;i++){last=(last+.02*(Math.random()*2-1))/1.02;d[i]=last*3.5;}
-    const n=c.createBufferSource();n.buffer=b;n.loop=true;const f=c.createBiquadFilter(),g=c.createGain();
-    const day=document.documentElement.dataset.theme==="day";f.type="lowpass";f.frequency.value=day?1400:700;
-    g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(day?.16:.2,c.currentTime+2);
-    n.connect(f).connect(g).connect(c.destination);n.start();amb={n,f,g};}
+    o.type="sine";o.frequency.setValueAtTime(1400,t);o.frequency.exponentialRampToValueAtTime(1100,t+.06);env(g,t,.10,.003,.09);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.12);}
+  function ambient(){}
   function set(v,save){on=v;const b=document.querySelector(".snd");if(b)b.setAttribute("aria-pressed",String(v));
-    if(save){try{localStorage.setItem("sound",v?"on":"off");}catch(e){}} ambient(v); if(v&&save) ribbon();}
+    if(save){try{localStorage.setItem("sound",v?"on":"off");}catch(e){}} if(v&&save) ribbon();}
   return {pull,flip,close,ribbon,set,ambient,get on(){return on;}};
 })();
 document.querySelector(".snd").addEventListener("click",()=>SND.set(!SND.on,true));
@@ -640,7 +633,6 @@ function setTheme(t,save){
   document.documentElement.dataset.theme=t;
   document.querySelectorAll(".toggle button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.t===t?"true":"false"));
   if(save){try{localStorage.setItem("theme",t);}catch(e){}}
-  if(typeof SND!=="undefined"&&SND.on) SND.ambient(true);
 }
 let saved=null; try{saved=localStorage.getItem("theme");}catch(e){}
 const mq=matchMedia("(prefers-color-scheme: dark)");
