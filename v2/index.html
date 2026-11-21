@@ -606,11 +606,13 @@ const SND=(()=>{let ctx=null,on=false,amb=null;
   function noise(sec){const c=C(),b=c.createBuffer(1,Math.ceil(c.sampleRate*sec),c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const n=c.createBufferSource();n.buffer=b;return n;}
   function env(g,t0,peak,att,dec){g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(peak,t0+att);g.gain.exponentialRampToValueAtTime(.0001,t0+att+dec);}
   // さりげなく：どれも短く、小さく。1回の操作で鳴るのは1音だけ
-  function pull(){if(!on)return;const c=C(),t=c.currentTime,n=noise(.25),f=c.createBiquadFilter(),g=c.createGain();
-    f.type="bandpass";f.Q.value=1.4;f.frequency.setValueAtTime(1100,t);f.frequency.exponentialRampToValueAtTime(2400,t+.15);
-    env(g,t,.45,.03,.16);n.connect(f).connect(g).connect(c.destination);n.start(t);n.stop(t+.25);}
-  function flip(){if(!on)return;const c=C(),t=c.currentTime,n=noise(.12),f=c.createBiquadFilter(),g=c.createGain();
-    f.type="highpass";f.frequency.value=2600;env(g,t,.22,.008,.08);n.connect(f).connect(g).connect(c.destination);n.start(t);n.stop(t+.12);}
+  // 「サー」：ゆっくり立ち上がって、ゆっくり消える柔らかな擦れ音
+  function hiss(dur,att,peak,f1,f2){const c=C(),t=c.currentTime,n=noise(dur+.05),hp=c.createBiquadFilter(),lp=c.createBiquadFilter(),g=c.createGain();
+    hp.type="highpass";hp.frequency.value=1200;lp.type="lowpass";lp.Q.value=.5;lp.frequency.setValueAtTime(f1,t);lp.frequency.linearRampToValueAtTime(f2,t+dur);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+att);g.gain.linearRampToValueAtTime(peak*.7,t+dur*.6);g.gain.linearRampToValueAtTime(0,t+dur);
+    n.connect(hp).connect(lp).connect(g).connect(c.destination);n.start(t);n.stop(t+dur+.05);}
+  function pull(){if(!on)return; hiss(.65,.18,.20,5200,3800);}
+  function flip(){if(!on)return; hiss(.4,.1,.12,6500,4500);}
   function close(){if(!on)return;const c=C(),t=c.currentTime,o=c.createOscillator(),g=c.createGain();
     o.type="sine";o.frequency.setValueAtTime(190,t);o.frequency.exponentialRampToValueAtTime(120,t+.08);env(g,t,.22,.004,.09);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.14);}
   function ribbon(){if(!on)return;const c=C(),t=c.currentTime,o=c.createOscillator(),g=c.createGain();
