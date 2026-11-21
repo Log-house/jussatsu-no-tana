@@ -602,29 +602,29 @@ lamp(); setInterval(lamp,5*60*1000);
 
 // 音（合成）。最初は鳴らさない。「音」を押したときだけ鳴り、設定は次回も覚えておく
 const SND=(()=>{let ctx=null,on=false,amb=null;
-  function C(){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();} if(ctx.state==="suspended")ctx.resume(); return ctx;}
+  function C(){if(!ctx){try{if(navigator.audioSession)navigator.audioSession.type="playback";}catch(e){} ctx=new (window.AudioContext||window.webkitAudioContext)();} if(ctx.state==="suspended")ctx.resume(); return ctx;}
   function noise(sec){const c=C(),b=c.createBuffer(1,Math.ceil(c.sampleRate*sec),c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const n=c.createBufferSource();n.buffer=b;return n;}
   function env(g,t0,peak,att,dec){g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(peak,t0+att);g.gain.exponentialRampToValueAtTime(.0001,t0+att+dec);}
   function pull(){if(!on)return;const c=C(),t=c.currentTime,n=noise(.4),f=c.createBiquadFilter(),g=c.createGain();
     f.type="bandpass";f.Q.value=1.2;f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(2600,t+.25);
-    env(g,t,.10,.04,.28);n.connect(f).connect(g).connect(c.destination);n.start(t);n.stop(t+.4);}
+    env(g,t,.35,.04,.28);n.connect(f).connect(g).connect(c.destination);n.start(t);n.stop(t+.4);}
   function flip(){if(!on)return;const c=C(),t=c.currentTime+.05;[0,.07,.15].forEach((o,k)=>{const n=noise(.2),f=c.createBiquadFilter(),g=c.createGain();
-    f.type="highpass";f.frequency.value=2200+k*500;env(g,t+o,.06-k*.015,.01,.12);n.connect(f).connect(g).connect(c.destination);n.start(t+o);n.stop(t+o+.2);});}
+    f.type="highpass";f.frequency.value=2200+k*500;env(g,t+o,.22-k*.05,.01,.12);n.connect(f).connect(g).connect(c.destination);n.start(t+o);n.stop(t+o+.2);});}
   function close(){if(!on)return;const c=C(),t=c.currentTime,o=c.createOscillator(),g=c.createGain(),n=noise(.08),f=c.createBiquadFilter(),g2=c.createGain();
-    o.type="sine";o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(70,t+.15);env(g,t,.18,.005,.18);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.25);
-    f.type="lowpass";f.frequency.value=1800;env(g2,t,.05,.002,.05);n.connect(f).connect(g2).connect(c.destination);n.start(t);n.stop(t+.08);}
+    o.type="sine";o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(70,t+.15);env(g,t,.5,.005,.18);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.25);
+    f.type="lowpass";f.frequency.value=1800;env(g2,t,.15,.002,.05);n.connect(f).connect(g2).connect(c.destination);n.start(t);n.stop(t+.08);}
   function ribbon(){if(!on)return;const c=C(),t=c.currentTime,o=c.createOscillator(),g=c.createGain();
-    o.type="sine";o.frequency.setValueAtTime(1500,t);o.frequency.exponentialRampToValueAtTime(1100,t+.08);env(g,t,.035,.004,.12);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.15);}
+    o.type="sine";o.frequency.setValueAtTime(1500,t);o.frequency.exponentialRampToValueAtTime(1100,t+.08);env(g,t,.12,.004,.12);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.15);}
   // 部屋の音：夜は低い静けさ（遠い雨のような気配）、昼は少し明るいざわめき。ごく小さく
   function ambient(start){if(amb){try{amb.n.stop();}catch(e){} amb=null;} if(!start)return;
     const c=C(),len=c.sampleRate*4,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);let last=0;
     for(let i=0;i<len;i++){last=(last+.02*(Math.random()*2-1))/1.02;d[i]=last*3.5;}
     const n=c.createBufferSource();n.buffer=b;n.loop=true;const f=c.createBiquadFilter(),g=c.createGain();
     const day=document.documentElement.dataset.theme==="day";f.type="lowpass";f.frequency.value=day?1400:700;
-    g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(day?.018:.024,c.currentTime+2);
+    g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(day?.06:.08,c.currentTime+2);
     n.connect(f).connect(g).connect(c.destination);n.start();amb={n,f,g};}
   function set(v,save){on=v;const b=document.querySelector(".snd");if(b)b.setAttribute("aria-pressed",String(v));
-    if(save){try{localStorage.setItem("sound",v?"on":"off");}catch(e){}} ambient(v);}
+    if(save){try{localStorage.setItem("sound",v?"on":"off");}catch(e){}} ambient(v); if(v&&save) ribbon();}
   return {pull,flip,close,ribbon,set,ambient,get on(){return on;}};
 })();
 document.querySelector(".snd").addEventListener("click",()=>SND.set(!SND.on,true));
