@@ -97,6 +97,11 @@ button.spine:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .spine .mk{font-family:var(--display);font-size:10px;line-height:1;margin-top:10px;color:var(--foil);opacity:.8;
   border:1px solid var(--foil);border-radius:50%;width:16px;height:16px;display:grid;place-items:center}
 
+
+/* 本立て：十冊と寄道（11冊目）のあいだに、目立たないように一つ */
+.bookend{align-self:flex-end;width:10px;height:70px;margin:0 8px 0 6px;position:relative;flex:none}
+.bookend::before{content:"";position:absolute;left:0;bottom:0;width:3px;height:100%;background:var(--muted);opacity:.45;border-radius:1px}
+.bookend::after{content:"";position:absolute;left:0;bottom:0;width:14px;height:3px;background:var(--muted);opacity:.45;border-radius:1px}
 /* 解説カード：棚の下に開く */
 .card{overflow:hidden;max-height:0;opacity:0;transition:max-height .45s ease,opacity .3s ease,margin .3s ease}
 .card.open{max-height:1400px;opacity:1;margin-top:18px}
@@ -201,7 +206,7 @@ footer{max-width:1180px;margin:20px auto 40px;padding:16px 24px 0;border-top:1px
 <header class="site">
   <a class="logo" href="#">十冊の棚</a>
   <nav class="menu" aria-label="メニュー">
-    <a href="#">棚</a><a class="opt" href="#">選書の方法</a><a class="opt" href="#">この本屋について</a>
+    <a href="./" aria-current="page">棚</a><a class="opt" href="method.html">選書の方法</a><a class="opt" href="#">この本屋について</a>
     <span class="toggle" role="group" aria-label="背景の明るさ">
       <button type="button" data-t="night" aria-pressed="true">夜</button><button type="button" data-t="day" aria-pressed="false">昼</button>
     </span>
@@ -460,8 +465,11 @@ SHELVES.forEach((shelf,si)=>{
   main.appendChild(sec);
   const row=sec.querySelector(".row"), card=sec.querySelector(".card");
   const spines=[];
+  // 寄道（旧・変化球）を末尾へ移し、本立ての外に置く
+  shelf.books.sort((x,y)=>(MAP[x[2]]==="寄道")-(MAP[y[2]]==="寄道"));
   shelf.books.forEach((b,bi)=>{
-    const [title,author,old]=b; const role=MAP[old]; const c=CLOTH[role];
+    const [title,author,old]=b;
+    if(MAP[old]==="寄道"){const be=document.createElement("span");be.className="bookend";be.setAttribute("aria-hidden","true");row.appendChild(be);} const role=MAP[old]; const c=CLOTH[role];
     const label=SHORT[title]||title;
     const fmt=b[5]||FORMAT[title], pgs=b[4]||PAGES[title];
     const h=Math.round((FORMAT_MM[fmt]||188)*SCALE);
@@ -491,7 +499,7 @@ SHELVES.forEach((shelf,si)=>{
     spines.forEach((s,k)=>s.setAttribute("aria-pressed",k===i?"true":"false"));
     card.innerHTML=`<div class="card-in">
       <button class="close" type="button" aria-label="閉じる">×</button>
-      <span class="chip"><i style="background:${c.bg}"></i>${role}</span>
+      <span class="chip"><i style="background:${c.bg}"></i>${role==="寄道"?"寄道（11冊目・人が選んだ一冊）":role}</span>
       <h3>${title}</h3>
       <p class="meta">${author}　<span class="tbd">出版社</span>　<span class="tbd">原書の地域／年</span></p>
       <h4>出版社の内容紹介</h4>
