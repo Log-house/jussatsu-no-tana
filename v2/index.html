@@ -106,6 +106,20 @@ button.spine:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 /* 初回だけ：最初の棚の背表紙が1冊、少し浮いて戻る（押せることを動きで伝える） */
 @keyframes hint{0%{transform:none}35%{transform:translateY(-12px)}70%{transform:translateY(-12px)}100%{transform:none}}
 button.spine.hint{animation:hint 1.2s cubic-bezier(.2,.7,.2,1) .8s 1}
+
+/* 自分のしおり：読んだ（赤い紐）／読みたい（灰青の短い紐） */
+/* 本の天から、挟んだしおり紐が少しのぞく */
+button.spine .rib{position:absolute;bottom:100%;left:62%;width:4px;height:0;transition:height .35s ease;pointer-events:none;
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)}
+button.spine[data-mark="read"] .rib{height:16px;background:#B0463B}
+button.spine[data-mark="want"] .rib{height:11px;background:#8A97A6}
+.marks{display:flex;gap:8px;margin:0 0 14px}
+.marks button{all:unset;cursor:pointer;font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 12px;color:var(--muted)}
+.marks button[aria-pressed="true"]{color:var(--ink);border-color:var(--accent)}
+.marks button:focus-visible{outline:2px solid var(--accent)}
+.snd{all:unset;cursor:pointer;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 12px}
+.snd[aria-pressed="true"]{color:var(--ink);border-color:var(--accent)}
+.snd:focus-visible{outline:2px solid var(--accent)}
 /* 解説カード：棚の下に開く */
 .card{overflow:hidden;max-height:0;opacity:0;transition:max-height .45s ease,opacity .3s ease,margin .3s ease}
 .card.open{max-height:1400px;opacity:1;margin-top:18px}
@@ -184,9 +198,10 @@ footer{max-width:1180px;margin:20px auto 40px;padding:16px 24px 0;border-top:1px
 :root[data-spine="c"] .spine .t{font-weight:700;text-shadow:0 1px 0 rgba(0,0,0,.6),0 0 6px rgba(220,190,120,.25)}
 
 /* 棚の上から照らす光（棚ごとに小さな灯りがあるイメージ） */
+:root{--lamp:255,236,200;--lampA:.07}
 :root[data-spine="b"] .rack::after{content:"";position:absolute;left:0;right:0;top:0;height:100%;pointer-events:none;
-  background:radial-gradient(60% 70% at 50% 0%,rgba(255,236,200,.06),rgba(255,236,200,0) 70%);mix-blend-mode:screen}
-:root[data-theme="day"][data-spine="b"] .rack::after{background:radial-gradient(60% 70% at 50% 0%,rgba(255,250,235,.45),rgba(255,250,235,0) 70%);mix-blend-mode:soft-light}
+  background:radial-gradient(60% 70% at 50% 0%,rgba(var(--lamp),var(--lampA)),rgba(var(--lamp),0) 70%);mix-blend-mode:screen;transition:background 2s}
+:root[data-theme="day"][data-spine="b"] .rack::after{background:radial-gradient(60% 70% at 50% 0%,rgba(var(--lamp),.40),rgba(var(--lamp),0) 70%);mix-blend-mode:soft-light}
 :root[data-spine="b"] button.spine:hover{filter:brightness(1.08)}
 /* ===== 見比べ用：棚1（木目の棚板）／2（線一本）／3（木の棚箱） ===== */
 :root[data-shelf="2"] .rack::before{display:none}
@@ -221,6 +236,7 @@ footer{max-width:1180px;margin:20px auto 40px;padding:16px 24px 0;border-top:1px
     <span class="toggle" role="group" aria-label="背景の明るさ">
       <button type="button" data-t="night" aria-pressed="true">夜</button><button type="button" data-t="day" aria-pressed="false">昼</button>
     </span>
+    <button class="snd" type="button" aria-pressed="false" aria-label="音">音</button>
   </nav>
 </header>
 
@@ -512,18 +528,21 @@ SHELVES.map((shelf,si)=>[shelf,si]).reverse().forEach(([shelf,si])=>{
     btn.style.cssText=`height:${h}px;width:${w}px;background-color:${c.bg};--foil:${c.foil}`;
     btn.setAttribute("aria-pressed","false");
     btn.setAttribute("aria-label",`${title}（${role}）`);
-    btn.innerHTML=`<span class="t" style="font-size:${fs}px">${label}</span>`;
+    btn.innerHTML=`<span class="rib" aria-hidden="true"></span><span class="t" style="font-size:${fs}px">${label}</span>`;
+    const mk=getMark(title); if(mk) btn.dataset.mark=mk;
     btn.addEventListener("click",()=>{ btn.getAttribute("aria-pressed")==="true" ? close() : open(bi); });
     btn.dataset.h=h; btn.dataset.len=label.length;
     row.appendChild(btn); spines.push(btn);
   });
   if(MOB) fitRow(row);
   function close(){
+    if(card.classList.contains("open")) SND.close();
     spines.forEach(s=>s.setAttribute("aria-pressed","false"));
     card.classList.remove("open"); scrim.classList.remove("on"); closeCurrent=null;
   }
   function open(i){
     if(closeCurrent && closeCurrent!==close) closeCurrent();
+    if(spines[i].getAttribute("aria-pressed")!=="true") SND.pull();
     const [title,author,old,desc]=shelf.books[i]; const role=MAP[old]; const c=CLOTH[role];
     const hh=hash(title);
     spines.forEach((s,k)=>s.setAttribute("aria-pressed",k===i?"true":"false"));
@@ -537,6 +556,7 @@ SHELVES.map((shelf,si)=>[shelf,si]).reverse().forEach(([shelf,si])=>{
       <h4>解説</h4>
       <div class="desc">${desc.split("\n").map(x=>`<p>${x}</p>`).join("")}</div>
       <p class="ai">AIが資料をもとに下書きし、編集者が確認・推敲しています。</p>
+      <div class="marks" role="group" aria-label="自分のしおり"><button type="button" data-m="read" aria-pressed="${getMark(title)==="read"}">読んだ</button><button type="button" data-m="want" aria-pressed="${getMark(title)==="want"}">読みたい</button></div>
       <div class="buy"><a href="#" onclick="return false">書店で買う</a><a href="#" onclick="return false">図書館で探す</a><small>広告を含みます</small></div>
       <details class="log"><summary>選書の記録を見る</summary><dl>
         <dt>大学図書館の所蔵</dt><dd>${(400+hh%900).toLocaleString()}館<span class="sample">仮</span></dd>
@@ -546,7 +566,13 @@ SHELVES.map((shelf,si)=>[shelf,si]).reverse().forEach(([shelf,si])=>{
       </dl></details>
       <div class="pn"><button type="button" data-d="-1" ${i===0?"disabled":""}>前の本</button><button type="button" data-d="1" ${i===shelf.books.length-1?"disabled":""}>次の本</button></div>
     </div>`;
-    card.classList.add("open");
+    card.classList.add("open"); SND.flip();
+    card.querySelectorAll(".marks button").forEach(mb=>mb.addEventListener("click",()=>{
+      const cur=getMark(title), next=cur===mb.dataset.m?null:mb.dataset.m; setMark(title,next);
+      if(next) spines[i].dataset.mark=next; else delete spines[i].dataset.mark;
+      card.querySelectorAll(".marks button").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.m===next)));
+      if(next) SND.ribbon();
+    }));
     if(matchMedia("(max-width:600px)").matches) scrim.classList.add("on");
     closeCurrent=close;
     card.querySelector(".close").addEventListener("click",close);
@@ -562,6 +588,49 @@ SHELVES.map((shelf,si)=>[shelf,si]).reverse().forEach(([shelf,si])=>{
   }
 });
 
+
+// 自分のしおり（この端末のブラウザにだけ保存）
+function getMark(t){try{return (JSON.parse(localStorage.getItem("marks")||"{}"))[t]||null;}catch(e){return null;}}
+function setMark(t,v){try{const m=JSON.parse(localStorage.getItem("marks")||"{}"); if(v) m[t]=v; else delete m[t]; localStorage.setItem("marks",JSON.stringify(m));}catch(e){}}
+
+// 時刻の光：朝は白っぽく、昼は自然光、夕方は琥珀、夜は暖かく、深夜は青白く
+function lamp(){const h=new Date().getHours(); let c,a;
+  if(h>=5&&h<10){c="245,248,255";a=.08}else if(h<16&&h>=10){c="255,250,238";a=.07}
+  else if(h>=16&&h<19){c="255,184,104";a=.12}else if(h>=19){c="255,214,160";a=.09}else{c="168,190,255";a=.10}
+  document.documentElement.style.setProperty("--lamp",c); document.documentElement.style.setProperty("--lampA",a);}
+lamp(); setInterval(lamp,5*60*1000);
+
+// 音（合成）。最初は鳴らさない。「音」を押したときだけ鳴り、設定は次回も覚えておく
+const SND=(()=>{let ctx=null,on=false,amb=null;
+  function C(){if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();} if(ctx.state==="suspended")ctx.resume(); return ctx;}
+  function noise(sec){const c=C(),b=c.createBuffer(1,Math.ceil(c.sampleRate*sec),c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const n=c.createBufferSource();n.buffer=b;return n;}
+  function env(g,t0,peak,att,dec){g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(peak,t0+att);g.gain.exponentialRampToValueAtTime(.0001,t0+att+dec);}
+  function pull(){if(!on)return;const c=C(),t=c.currentTime,n=noise(.4),f=c.createBiquadFilter(),g=c.createGain();
+    f.type="bandpass";f.Q.value=1.2;f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(2600,t+.25);
+    env(g,t,.10,.04,.28);n.connect(f).connect(g).connect(c.destination);n.start(t);n.stop(t+.4);}
+  function flip(){if(!on)return;const c=C(),t=c.currentTime+.05;[0,.07,.15].forEach((o,k)=>{const n=noise(.2),f=c.createBiquadFilter(),g=c.createGain();
+    f.type="highpass";f.frequency.value=2200+k*500;env(g,t+o,.06-k*.015,.01,.12);n.connect(f).connect(g).connect(c.destination);n.start(t+o);n.stop(t+o+.2);});}
+  function close(){if(!on)return;const c=C(),t=c.currentTime,o=c.createOscillator(),g=c.createGain(),n=noise(.08),f=c.createBiquadFilter(),g2=c.createGain();
+    o.type="sine";o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(70,t+.15);env(g,t,.18,.005,.18);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.25);
+    f.type="lowpass";f.frequency.value=1800;env(g2,t,.05,.002,.05);n.connect(f).connect(g2).connect(c.destination);n.start(t);n.stop(t+.08);}
+  function ribbon(){if(!on)return;const c=C(),t=c.currentTime,o=c.createOscillator(),g=c.createGain();
+    o.type="sine";o.frequency.setValueAtTime(1500,t);o.frequency.exponentialRampToValueAtTime(1100,t+.08);env(g,t,.035,.004,.12);o.connect(g).connect(c.destination);o.start(t);o.stop(t+.15);}
+  // 部屋の音：夜は低い静けさ（遠い雨のような気配）、昼は少し明るいざわめき。ごく小さく
+  function ambient(start){if(amb){try{amb.n.stop();}catch(e){} amb=null;} if(!start)return;
+    const c=C(),len=c.sampleRate*4,b=c.createBuffer(1,len,c.sampleRate),d=b.getChannelData(0);let last=0;
+    for(let i=0;i<len;i++){last=(last+.02*(Math.random()*2-1))/1.02;d[i]=last*3.5;}
+    const n=c.createBufferSource();n.buffer=b;n.loop=true;const f=c.createBiquadFilter(),g=c.createGain();
+    const day=document.documentElement.dataset.theme==="day";f.type="lowpass";f.frequency.value=day?1400:700;
+    g.gain.setValueAtTime(0,c.currentTime);g.gain.linearRampToValueAtTime(day?.018:.024,c.currentTime+2);
+    n.connect(f).connect(g).connect(c.destination);n.start();amb={n,f,g};}
+  function set(v,save){on=v;const b=document.querySelector(".snd");if(b)b.setAttribute("aria-pressed",String(v));
+    if(save){try{localStorage.setItem("sound",v?"on":"off");}catch(e){}} ambient(v);}
+  return {pull,flip,close,ribbon,set,ambient,get on(){return on;}};
+})();
+document.querySelector(".snd").addEventListener("click",()=>SND.set(!SND.on,true));
+// 保存された「音あり」は、最初の操作のあとで有効にする（ブラウザは操作なしの再生を止めるため）
+(()=>{let v=null;try{v=localStorage.getItem("sound");}catch(e){} if(v==="on"){const go=()=>{SND.set(true,false);removeEventListener("pointerdown",go);};addEventListener("pointerdown",go);}})();
+
 // 初回だけの「浮く」動き
 (()=>{let seen=null;try{seen=localStorage.getItem("seen");}catch(e){}
   if(seen) return; const first=document.querySelector("section.shelf .spine"); if(first) first.classList.add("hint");
@@ -571,6 +640,7 @@ function setTheme(t,save){
   document.documentElement.dataset.theme=t;
   document.querySelectorAll(".toggle button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.t===t?"true":"false"));
   if(save){try{localStorage.setItem("theme",t);}catch(e){}}
+  if(typeof SND!=="undefined"&&SND.on) SND.ambient(true);
 }
 let saved=null; try{saved=localStorage.getItem("theme");}catch(e){}
 const mq=matchMedia("(prefers-color-scheme: dark)");
