@@ -102,6 +102,10 @@ button.spine:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .bookend{align-self:flex-end;width:10px;height:70px;margin:0 8px 0 6px;position:relative;flex:none}
 .bookend::before{content:"";position:absolute;left:0;bottom:0;width:3px;height:100%;background:var(--muted);opacity:.45;border-radius:1px}
 .bookend::after{content:"";position:absolute;left:0;bottom:0;width:14px;height:3px;background:var(--muted);opacity:.45;border-radius:1px}
+
+/* 初回だけ：最初の棚の背表紙が1冊、少し浮いて戻る（押せることを動きで伝える） */
+@keyframes hint{0%{transform:none}35%{transform:translateY(-12px)}70%{transform:translateY(-12px)}100%{transform:none}}
+button.spine.hint{animation:hint 1.2s cubic-bezier(.2,.7,.2,1) .8s 1}
 /* 解説カード：棚の下に開く */
 .card{overflow:hidden;max-height:0;opacity:0;transition:max-height .45s ease,opacity .3s ease,margin .3s ease}
 .card.open{max-height:1400px;opacity:1;margin-top:18px}
@@ -456,7 +460,8 @@ let closeCurrent=null;
 scrim.addEventListener("click",()=>closeCurrent&&closeCurrent());
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&closeCurrent)closeCurrent();});
 
-SHELVES.forEach((shelf,si)=>{
+// 棚番号は公開順で固定。表示は新しい棚を上に（並び順は後から変えられる）
+SHELVES.map((shelf,si)=>[shelf,si]).reverse().forEach(([shelf,si])=>{
   const sec=document.createElement("section");
   sec.className="shelf"; sec.id=shelf.id;
   sec.innerHTML=`<div class="label"><span class="no">${pad(si+1)}</span>${shelf.name}</div>
@@ -526,6 +531,10 @@ SHELVES.forEach((shelf,si)=>{
   }
 });
 
+// 初回だけの「浮く」動き
+(()=>{let seen=null;try{seen=localStorage.getItem("seen");}catch(e){}
+  if(seen) return; const first=document.querySelector("section.shelf .spine"); if(first) first.classList.add("hint");
+  try{localStorage.setItem("seen","1");}catch(e){}})();
 // 夜／昼：最初は端末の設定に合わせ、選んだほうを次回も覚えておく
 function setTheme(t,save){
   document.documentElement.dataset.theme=t;
